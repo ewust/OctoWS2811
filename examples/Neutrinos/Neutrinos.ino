@@ -1,16 +1,17 @@
 #include <OctoWS2811.h>
 
 #define SECTION_LEN 178             // number of pixels in one section
-#define STRIP_LEN (SECTION_LEN*3)   // longest strip length. Pretend all are equal (even though some are only 2 sections long)
-#define WHEEL_LEN (SECTION_LEN*5)   // number of pixels in one side of the wheel (top or bottom)
+#define STRIP_LEN (SECTION_LEN)   // longest strip length. Pretend all are equal (even though some are only 2 sections long)
+#define WHEEL_LEN (SECTION_LEN*10)   // number of pixels in one side of the wheel (top or bottom)
 
 
-DMAMEM int displayMemory[STRIP_LEN*6];
-int drawingMemory[STRIP_LEN*6];
+DMAMEM uint16_t displayMemory[STRIP_LEN*24];
+uint16_t drawingMemory[STRIP_LEN*24];
+//uint16_t *drawingMemory = displayMemory;
 
 const int config = WS2811_GRB | WS2811_800kHz;
 
-OctoWS2811 leds(STRIP_LEN, displayMemory, drawingMemory, config);
+OctoWS2811 leds(SECTION_LEN, displayMemory, drawingMemory, config);
 
 // Map wheel idx to led num 
 int wheel_idx_to_led_num(int idx, bool is_top)
@@ -162,7 +163,7 @@ void new_line()
   }
   int color = rainbowColors[(time/2) % 180];
   line->start = (rand() % (100*WHEEL_LEN));
-  line->end = line->start + 100*((rand() % 20) + 1);
+  line->end = line->start + 100*((rand() % 2) + 1);
   line->speed = (rand() % 400) - 200;
   line->life = (rand() % 80) + 2;
   line->r = (color >> 16) & 0xFF;
