@@ -23,47 +23,56 @@
 
 
 
+
 #define SECTION_LEN 178             // number of pixels in one section
-#define STRIP_LEN (SECTION_LEN*3)   // longest strip length. Pretend all are equal (even though some are only 2 sections long)
+#define STRIP_LEN (SECTION_LEN)   // longest strip length. Pretend all are equal (even though some are only 2 sections long)
 #define WHEEL_LEN (SECTION_LEN*5)   // number of pixels in one side of the wheel (top or bottom)
 
 
-DMAMEM int displayMemory[STRIP_LEN*6];
-int drawingMemory[STRIP_LEN*6];
+DMAMEM uint16_t displayMemory[SECTION_LEN*24];
+uint16_t drawingMemory[SECTION_LEN*24];
+//uint16_t *drawingMemory = displayMemory;
 
 const int config = WS2811_GRB | WS2811_800kHz;
 
-OctoWS2811 leds(STRIP_LEN, displayMemory, drawingMemory, config);
+OctoWS2811 leds(SECTION_LEN, displayMemory, drawingMemory, config);
 
 int temps[WHEEL_LEN];
 
 // Map wheel idx to led num 
+
 int wheel_idx_to_led_num(int idx, bool is_top)
 {
-    // sanity check: idx < SECTION_LEN*5?
-
     int num = 0;
-    
     if (!is_top) {
-        // a -> c, b -> d
-        num += STRIP_LEN*2;
+        // a->f, b->g, c->h, etc
+        num += 5*SECTION_LEN;
     }
-    if (idx > STRIP_LEN) {
+    if (idx > 3*SECTION_LEN) {
         // Second "half" of wheel
-        // a -> b
-        // c -> d
+        // a->d, b->e, c->?
+        // f->i, g->j, h->?
 
-        // e.g.:
-        //num += STRIP_LEN;
-        //num += idx - STRIP_LEN
+        // i.e.:
+        //num += 3*SECTION_LEN;
+        //num += idx - 3*SECTION_LEN
         // which is just
         num += idx;
     } else {
         // reverse
-        num += ((STRIP_LEN - 1) - idx);
+        // 0 - 177 should be reversed (177 - idx)
+        // 178 - (178+177) should be (177+178)-idx
+        if (idx < SECTION_LEN) {
+          num += (SECTION_LEN - idx - 1);
+        } else if (idx < 2*SECTION_LEN) {
+          num += (3*SECTION_LEN - idx - 1);
+        } else {
+          num += (5*SECTION_LEN - idx - 1);
+        }
     }
     return num;
 }
+
 
 
 
@@ -144,19 +153,19 @@ void loop() {
     int i;
     for (i=0; i<v; i++) {
         // Update position
-        pos--;
-        if (pos >= 0) {
+        pos++;
+        if (pos >= 0 && pos < WHEEL_LEN) {
             temps[pos] += 7500;
         }
-        if (pos <= 0) {
-            pos = WHEEL_LEN;
+        if (pos > WHEEL_LEN) {
+            pos = 0;
             v++;
             if (v > 10) v = 1;
         }
     }
 
     // Write colors
-    digitalWrite(1, HIGH);
+    //digitalWrite(1, HIGH);
     for (i=0; i < WHEEL_LEN; i++) {
         float t = temps[i];
         int color = blackBodyColor(t);
@@ -166,7 +175,7 @@ void loop() {
         temps[i]*=0.8;
     }
     leds.show();
-    digitalWrite(1, LOW);
+    //digitalWrite(1, LOW);
     delayMicroseconds(30*1000);
 }
 
