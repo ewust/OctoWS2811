@@ -1,36 +1,17 @@
-
-/*
-  Required Connections
-  --------------------
-    pin 2:  LED Strip #1    OctoWS2811 drives 8 LED Strips.
-    pin 14: LED strip #2    All 8 are the same length.
-    pin 7:  LED strip #3
-    pin 8:  LED strip #4    A 100 ohm resistor should used
-    pin 6:  LED strip #5    between each Teensy pin and the
-    pin 20: LED strip #6    wire to the LED strip, to minimize
-    pin 21: LED strip #7    high frequency ringining & noise.
-    pin 5:  LED strip #8
-    pin 15 & 16 - Connect together, but do not use
-    pin 4 - Do not use
-    pin 3 - Do not use as PWM.  Normal use is ok.
-    pin 1 - Output indicating CPU usage, monitor with an oscilloscope,
-            logic analyzer or even an LED (brighter = CPU busier)
-*/
-
 #include <OctoWS2811.h>
+#include "wheel.h"
 
 
 
 
 
+//#define SECTION_LEN 178             // number of pixels in one section
+//#define STRIP_LEN (SECTION_LEN)   // longest strip length. Pretend all are equal (even though some are only 2 sections long)
+//#define WHEEL_LEN (SECTION_LEN*5)   // number of pixels in one side of the wheel (top or bottom)
 
-#define SECTION_LEN 178             // number of pixels in one section
-#define STRIP_LEN (SECTION_LEN)   // longest strip length. Pretend all are equal (even though some are only 2 sections long)
-#define WHEEL_LEN (SECTION_LEN*5)   // number of pixels in one side of the wheel (top or bottom)
 
-
-DMAMEM uint16_t displayMemory[SECTION_LEN*24];
-uint16_t drawingMemory[SECTION_LEN*24];
+DMAMEM int displayMemory[STRIP_LEN*12];
+int drawingMemory[STRIP_LEN*12];
 //uint16_t *drawingMemory = displayMemory;
 
 const int config = WS2811_GRB | WS2811_800kHz;
@@ -40,7 +21,7 @@ OctoWS2811 leds(SECTION_LEN, displayMemory, drawingMemory, config);
 int temps[WHEEL_LEN];
 
 // Map wheel idx to led num 
-
+/*
 int wheel_idx_to_led_num(int idx, bool is_top)
 {
     int num = 0;
@@ -72,7 +53,7 @@ int wheel_idx_to_led_num(int idx, bool is_top)
     }
     return num;
 }
-
+*/
 
 
 
@@ -136,6 +117,14 @@ int pos;
 int v;
 
 void setup() {
+
+
+
+  while (!Serial && (millis() < 2000)) ;
+  Serial.begin(38400);
+
+    Serial.println("Setup Called...");
+    Serial.flush();
     pinMode(1, OUTPUT);
     digitalWrite(1, HIGH);
     for (int i=0; i<WHEEL_LEN; i++) {
@@ -150,6 +139,9 @@ void setup() {
 
 void loop() {
 
+
+  Serial.println("Loop Called...");
+  Serial.flush();
     int i;
     for (i=0; i<v; i++) {
         // Update position
