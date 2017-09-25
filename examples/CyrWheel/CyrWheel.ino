@@ -30,10 +30,11 @@ void setup() {
     Serial.flush();
 
     // Initialize config
-    conf.loop_fns = (void (**)(void))calloc(sizeof(void (*)(void)), 3);
+    conf.loop_fns = (void (**)(void))calloc(sizeof(void (*)(void)), 10);
     conf.loop_fns[0] = &loop_neutrinos;
     conf.loop_fns[1] = &loop_blazers;
-    conf.loop_fns[2] = NULL;
+    conf.loop_fns[2] = &loop_rainbow;
+    conf.loop_fns[3] = NULL;
 
     conf.cur_loop_fn_idx = 0;
     conf.show_start_time = millis();
@@ -50,6 +51,7 @@ void setup() {
     // Call show-specific setups
     setup_neutrinos();
     setup_blazers();
+    setup_rainbow();
 
     leds.begin();
 
